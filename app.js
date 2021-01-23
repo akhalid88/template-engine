@@ -4,41 +4,37 @@ const Intern = require("./lib/Intern");
 const inquirer = require("inquirer");
 const path = require("path");
 const fs = require("fs");
-const util = require('util');
 
 const OUTPUT_DIR = path.resolve(__dirname, "output");
 const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./lib/htmlRenderer");
+const { runInNewContext } = require("vm");
 
-const writeToFile = util.promisify(fs.writeFile);
-
-// Write code to use inquirer to gather information about the development team members,
-// and to create objects for each team member (using the correct classes as blueprints!)
-
-// After the user has input all employees desired, call the `render` function (required
-// above) and pass in an array containing all employee objects; the `render` function will
-// generate and return a block of HTML including templated divs for each employee!
-
-// After you have your html, you're now ready to create an HTML file using the HTML
-// returned from the `render` function. Now write it to a file named `team.html` in the
-// `output` folder. You can use the variable `outputPath` above target this location.
-// Hint: you may need to check if the `output` folder exists and create it if it
-// does not.
-
-// HINT: each employee type (manager, engineer, or intern) has slightly different
-// information; write your code to ask different questions via inquirer depending on
-// employee type.
-
-// HINT: make sure to build out your classes first! Remember that your Manager, Engineer,
-// and Intern classes should all extend from a class named Employee; see the directions
-// for further information. Be sure to test out each class and verify it generates an
-// object with the correct structure and methods. This structure will be crucial in order
-// for the provided `render` function to work! ```
-
+//Initialize variables
 const employees = [];
 
-async function requestManagerInfo() {
+//Create and push employees to employee array based on role
+function createEmployee(role, info) {
+	switch (role) {
+		case "Manager":
+			let newMgr = new Manager(info.managerName, info.managerID, info.managerEmail, info.managerOffice);
+			employees.push(newMgr);
+			break
+		case "Engineer":
+			let newEng = new Engineer(info.engineerName, info.engineerID, info.engineerEmail, info.engineerGithub);
+			employees.push(newEng);
+			break;
+		case "Intern":
+			let newInt = new Intern(info.internName, info.internID, info.internEmail, info.internSchool);
+			employees.push(newInt);
+			break;
+		default:
+			break;
+	}
+}
+//User prompt for Intern info; initiated by running 'node app.js' in CLI
+function requestManagerInfo() {
 	inquirer.prompt([
 		{
 			type: "input",
@@ -61,13 +57,13 @@ async function requestManagerInfo() {
 			name: "managerOffice"
 		}
 	]).then(function (response) {
-		let newMgr = new Manager(response.managerName, response.managerID, response.managerEmail, response.managerOffice);
-		employees.push(newMgr);
+		createEmployee("Manager", response);
 		employeeMenu();
 	})
 }
 
-async function requestEngineerInfo() {
+//User prompt for Engineer info; initiated by selecting Engineer from the Employee menu
+function requestEngineerInfo() {
 	inquirer.prompt([
 		{
 			type: "input",
@@ -90,13 +86,13 @@ async function requestEngineerInfo() {
 			name: "engineerGithub"
 		}
 	]).then(function (response) {
-		let newEng = new Engineer(response.engineerName, response.engineerID, response.engineerEmail, response.engineerGithub)
-		employees.push(newEng);
+		createEmployee("Engineer", response);
 		employeeMenu();
 	})
 }
 
-async function requestInternInfo() {
+//User prompt for Intern info; initiated by selecting Intern from the Employee menu
+function requestInternInfo() {
 	inquirer.prompt([
 		{
 			type: "input",
@@ -119,19 +115,19 @@ async function requestInternInfo() {
 			name: "internSchool"
 		}
 	]).then(function (response) {
-		let newInt = new Intern(response.internName, response.internID, response.internEmail, response.internSchool)
-		employees.push(newInt);
+		createEmployee("Intern", response);
 		employeeMenu();
 	})
 }
 
-async function employeeMenu() {
+//Prompt to select which type of user to create; initiated after creating any type of employee
+function employeeMenu() {
 	inquirer.prompt([
 		{
 			type: "list",
 			message: "Which type of team member would you like to add?",
 			name: "teamMember",
-			choices: ["Engineer", "Intern", "No More Mutants"]
+			choices: ["Engineer", "Intern", "Create Super Team"]
 		}
 	]).then(function (choice) {
 		switch (choice.teamMember) {
@@ -141,27 +137,25 @@ async function employeeMenu() {
 			case "Intern":
 				requestInternInfo()
 				break;
-			case "No More Mutants":
-				console.log("To me my X-Men!");
+			case "Create Super Team":
+				console.log("Compiling Team Roster...");
 				generateHTML();
 				break;
 			default:
-				console.log("No, the flatscans have won!");
+				console.log("Invalid choice!");
 				break;
 		}
 	});
 }
 
-async function init() {
-	await requestManagerInfo();
-	// console.log(employees);
-	// if (employees) {
-	// 	await generateHTML();
-	// 	// await writeToFile("test.html", render(employees));
-	// }
-}
-
-async function generateHTML() {
+//Created folder structure and file based on inputs; initiated after exiting employeeMenu();
+function generateHTML() {
+	//check for output directory and create it if it doesn't exist
+	if (!fs.existsSync(OUTPUT_DIR)) {
+		console.log("HERE");
+		fs.mkdirSync(OUTPUT_DIR);
+	}
+	//write file to output path
 	fs.writeFile(outputPath, render(employees), function (err) {
 		if (err) {
 			throw err;
@@ -169,21 +163,9 @@ async function generateHTML() {
 	})
 }
 
+//Initiates app asynchronously
+async function init() {
+	await requestManagerInfo();
+}
+
 init();
-
-
-// function createEmployee(role, info) {
-// 	switch (role) {
-// 		case "Manager":
-// 			let newMgr = new Manager(response.managerName, response.managerID, response.managerEmail, response.managerOffice);
-// 			break;
-// 		case "Engineer":
-// 			let newEng = new Engineer(response.engineerName, response.engineerID, response.engineerEmail, response.engineerGithub);
-// 			break;
-// 		case "Intern":
-// 			let newInt = new Intern(response.internName, response.internID, response.internEmail, response.interSchool);
-// 			break;
-// 		default:
-// 			break;
-// 	}
-// }
