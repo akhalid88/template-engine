@@ -10,14 +10,9 @@ const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./lib/htmlRenderer");
 
-const mgr = [
-	new Manager("Dude", 321, "dude@manager.com", "A1234"),
-	new Engineer("Cowabunga", 088, "cowabunga@engineer.com", "B1234"),
-	new Intern("Gnarly", 867, "gnarly@intern.com", "C1234"),
-	new Intern("asdfdsfas", 867, "asdf@intern.com", "C1234"),
-];
-render(mgr);
-// console.log(mgr);
+const employees = [];
+render(employees);
+// console.log(mgr); //
 
 // Write code to use inquirer to gather information about the development team members,
 // and to create objects for each team member (using the correct classes as blueprints!)
@@ -44,97 +39,125 @@ render(mgr);
 
 
 
-// function requestManagerInfo() {
-// 	inquirer.prompt([
-// 		{
-// 			type: "input",
-// 			message: "What is the team manager' name?",
-// 			name: "managerName"
-// 		},
-// 		{
-// 			type: "input",
-// 			message: "What is the team manager's ID?",
-// 			name: "managerID"
-// 		},
-// 		{
-// 			type: "input",
-// 			message: "What is the team manager's email?",
-// 			name: "managerEmail"
-// 		},
-// 		{
-// 			type: "input",
-// 			message: "What is the team manager's office number?",
-// 			name: "managerOffice"
-// 		}
-// 	]).
-// }
+async function requestManagerInfo() {
+	inquirer.prompt([
+		{
+			type: "input",
+			message: "What is the team manager' name?",
+			name: "managerName"
+		},
+		{
+			type: "input",
+			message: "What is the team manager's ID?",
+			name: "managerID"
+		},
+		{
+			type: "input",
+			message: "What is the team manager's email?",
+			name: "managerEmail"
+		},
+		{
+			type: "input",
+			message: "What is the team manager's office number?",
+			name: "managerOffice"
+		}
+	]).then(function (response) {
+		let newMgr = new Manager(response.managerName, response.managerID, response.managerEmail, response.managerOffice)
+		employees.push(newMgr);
+		employeeMenu();
+	})
+}
 
-// function requestEngineerInfo() {
-// 	inquirer.prompt([
-// 		{
-// 			type: "input",
-// 			message: "What is your engineer's name?",
-// 			name: "engineerName"
-// 		},
-// 		{
-// 			type: "input",
-// 			message: "What is your engineer's ID?",
-// 			name: "engineerID"
-// 		},
-// 		{
-// 			type: "input",
-// 			message: "What is your engineer's email?",
-// 			name: "engineerEmail"
-// 		},
-// 		{
-// 			type: "input",
-// 			message: "What is your engineer's Github?",
-// 			name: "engineerGitHub"
-// 		}
-// 	])
-// }
+function requestEngineerInfo() {
+	inquirer.prompt([
+		{
+			type: "input",
+			message: "What is your engineer's name?",
+			name: "engineerName"
+		},
+		{
+			type: "input",
+			message: "What is your engineer's ID?",
+			name: "engineerID"
+		},
+		{
+			type: "input",
+			message: "What is your engineer's email?",
+			name: "engineerEmail"
+		},
+		{
+			type: "input",
+			message: "What is your engineer's Github?",
+			name: "engineerGithub"
+		}
+	]).then(function (response) {
+		console.log(response);
+		let newEng = new Engineer(response.engineerName, response.engineerID, response.engineerEmail, response.engineerGithub)
+		employees.push(newEng);
+		employeeMenu();
+	})
+}
 
-// function requestInternInfo() {
-// 	inquirer.prompt([
-// 		{
-// 			type: "input",
-// 			message: "What is your intern's name?",
-// 			name: "internName"
-// 		},
-// 		{
-// 			type: "input",
-// 			message: "What is your intern's ID?",
-// 			name: "internID"
-// 		},
-// 		{
-// 			type: "input",
-// 			message: "What is your intern's email?",
-// 			name: "internEmail"
-// 		},
-// 		{
-// 			type: "input",
-// 			message: "What is your intern's school?",
-// 			name: "internSchool"
-// 		}
-// 	])
-// }
+async function requestInternInfo() {
+	inquirer.prompt([
+		{
+			type: "input",
+			message: "What is your intern's name?",
+			name: "internName"
+		},
+		{
+			type: "input",
+			message: "What is your intern's ID?",
+			name: "internID"
+		},
+		{
+			type: "input",
+			message: "What is your intern's email?",
+			name: "internEmail"
+		},
+		{
+			type: "input",
+			message: "What is your intern's school?",
+			name: "internSchool"
+		}
+	]).then(function (response) {
+		let newInt = new Intern(response.internName, response.internID, response.internEmail, response.internSchool)
+		employees.push(newInt);
+		employeeMenu();
+	})
+}
 
-// function employeeMenu() {
-// 	inquirer.prompt([
-// 		{
-// 			type: "list",
-// 			message: "Which type of team member would you like to add?",
-// 			name: "teamMember",
-// 			choices: ["Engineer", "Intern"]
-// 		}
-// 	]).then(function(choice)) 
-// }
+async function employeeMenu() {
+	inquirer.prompt([
+		{
+			type: "list",
+			message: "Which type of team member would you like to add?",
+			name: "teamMember",
+			choices: ["Engineer", "Intern", "No More Mutants"]
+		}
+	]).then(function (choice) {
+		console.log(choice);
+		switch (choice.teamMember) {
+			case "Engineer":
+				requestEngineerInfo();
+				break;
+			case "Intern":
+				requestInternInfo()
+				break;
+			case "No More Mutants":
+				console.log("To me my X-Men!");
+				console.log(employees)
+				break;
+			default:
+				console.log("No, the flatscans have won!");
+				break;
+		}
+	});
+}
 
 
+async function init() {
+	await requestManagerInfo();
+}
 
-// async function init() {
-// 	await requestManagerInfo();
-// }
-
-
-// init();
+init();
