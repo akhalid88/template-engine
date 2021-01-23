@@ -4,15 +4,14 @@ const Intern = require("./lib/Intern");
 const inquirer = require("inquirer");
 const path = require("path");
 const fs = require("fs");
+const util = require('util');
 
 const OUTPUT_DIR = path.resolve(__dirname, "output");
 const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./lib/htmlRenderer");
 
-const employees = [];
-render(employees);
-// console.log(mgr); //
+const writeToFile = util.promisify(fs.writeFile);
 
 // Write code to use inquirer to gather information about the development team members,
 // and to create objects for each team member (using the correct classes as blueprints!)
@@ -37,7 +36,7 @@ render(employees);
 // object with the correct structure and methods. This structure will be crucial in order
 // for the provided `render` function to work! ```
 
-
+const employees = [];
 
 async function requestManagerInfo() {
 	inquirer.prompt([
@@ -62,13 +61,13 @@ async function requestManagerInfo() {
 			name: "managerOffice"
 		}
 	]).then(function (response) {
-		let newMgr = new Manager(response.managerName, response.managerID, response.managerEmail, response.managerOffice)
+		let newMgr = new Manager(response.managerName, response.managerID, response.managerEmail, response.managerOffice);
 		employees.push(newMgr);
 		employeeMenu();
 	})
 }
 
-function requestEngineerInfo() {
+async function requestEngineerInfo() {
 	inquirer.prompt([
 		{
 			type: "input",
@@ -91,7 +90,6 @@ function requestEngineerInfo() {
 			name: "engineerGithub"
 		}
 	]).then(function (response) {
-		console.log(response);
 		let newEng = new Engineer(response.engineerName, response.engineerID, response.engineerEmail, response.engineerGithub)
 		employees.push(newEng);
 		employeeMenu();
@@ -136,7 +134,6 @@ async function employeeMenu() {
 			choices: ["Engineer", "Intern", "No More Mutants"]
 		}
 	]).then(function (choice) {
-		console.log(choice);
 		switch (choice.teamMember) {
 			case "Engineer":
 				requestEngineerInfo();
@@ -146,7 +143,7 @@ async function employeeMenu() {
 				break;
 			case "No More Mutants":
 				console.log("To me my X-Men!");
-				console.log(employees)
+				generateHTML();
 				break;
 			default:
 				console.log("No, the flatscans have won!");
@@ -155,9 +152,38 @@ async function employeeMenu() {
 	});
 }
 
-
 async function init() {
 	await requestManagerInfo();
+	// console.log(employees);
+	// if (employees) {
+	// 	await generateHTML();
+	// 	// await writeToFile("test.html", render(employees));
+	// }
+}
+
+async function generateHTML() {
+	fs.writeFile(outputPath, render(employees), function (err) {
+		if (err) {
+			throw err;
+		}
+	})
 }
 
 init();
+
+
+// function createEmployee(role, info) {
+// 	switch (role) {
+// 		case "Manager":
+// 			let newMgr = new Manager(response.managerName, response.managerID, response.managerEmail, response.managerOffice);
+// 			break;
+// 		case "Engineer":
+// 			let newEng = new Engineer(response.engineerName, response.engineerID, response.engineerEmail, response.engineerGithub);
+// 			break;
+// 		case "Intern":
+// 			let newInt = new Intern(response.internName, response.internID, response.internEmail, response.interSchool);
+// 			break;
+// 		default:
+// 			break;
+// 	}
+// }
